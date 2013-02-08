@@ -3,8 +3,8 @@ import re
 import copy
 from collections import defaultdict
 
-token_to_docId=defaultdict(list)
-result_docId=[]
+token_to_docId= defaultdict(list)
+result_dict   = defaultdict(list)
 def build_index():
 	dir='books'
 	filenames = os.listdir(dir)
@@ -47,6 +47,7 @@ def add_Positional_Index(doc_Id,buf):
 
 def phrase_query(phrase):
 	list_of_docIds_per_phrase=[]
+	result_docId=[]
 	result_found=1
 	tokens=re.findall(r"[\w]+", phrase)
 	final_result=[]
@@ -56,29 +57,33 @@ def phrase_query(phrase):
 	for token in tokens:
 		token=token.lower()
 		if token in token_to_docId:
-			#print token,"If"
 			list_of_docIds_per_phrase.append([x for x in token_to_docId[token]])
-			#print list_of_docIds_per_phrase
 		else:
-			#print token,"else"
 			result_found=0
 			return 0
 	if result_found != 0:
 		common_docId_list =set(list_of_docIds_per_phrase[0]).intersection(*list_of_docIds_per_phrase[1:])
 	        #print common_docId_list, tokens,token_to_docId
+
 	else:
 		print "no match"
 	count=0
 	for token in tokens:
 		token=token.lower()
 		for doc in common_docId_list:
+                	docId_to_pos=defaultdict(list)
 			#print " doc ",doc 
-			token_to_docId[token][doc]=([x-count for x in token_to_docId[token][doc]])
+			#token_to_docId[token][doc]=([x-count for x in token_to_docId[token][doc]])
+			if not token in result_dict:
+				docId_to_pos[doc] = [x-count for x in token_to_docId[token][doc]]
+		        	result_dict[token]=docId_to_pos
+			else:
+				result_dict[token][doc] = [x-count for x in token_to_docId[token][doc]]
 		count +=1
 	for doc in common_docId_list:
 		temp_list=[]
 		for token in tokens:
-			temp_list.append(token_to_docId[token][doc])
+			temp_list.append(result_dict[token][doc])
 			print "doc",doc,"token",token,"temp list",temp_list
                 final_positional_list=set(temp_list[0]).intersection(*temp_list[1:])
 		print final_positional_list
