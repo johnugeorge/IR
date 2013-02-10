@@ -3,6 +3,7 @@ import re
 import copy
 from collections import defaultdict
 import boolean_retrieval
+import pickle
 
 kgram_index= defaultdict(set)
 inverted_index=defaultdict(set)
@@ -11,37 +12,38 @@ inverted_index=defaultdict(set)
 def build_index():
         dir='books'
         filenames = os.listdir(dir)
-        #filenames =['70.txt','119.txt']
         for filename in filenames:
-                #print "Filename",filename
                 rel_path=os.path.join(dir, filename)
                 match=re.search(r'([\d]+).txt', filename)
                 if match:
                         doc_Id= match.group(1)
                 f = open(rel_path, 'rU')
-                #print filename,doc_Id
                 buf=f.read()
-                #buf= " this is a fun this is.I dont know what when woow to do.worn Lets see one examaple and decide"
                 add_kgram_Index(doc_Id,buf)
                 f.close()
-                #break
-        print " Total Keys ",len(kgram_index)
+        #print " Total Keys ",len(kgram_index)
 
 def add_kgram_Index(doc_Id,buf):
         tokens=re.findall(r"[\w]+", buf)
         for token in tokens:
 		token=token.lower()
+		token="".join(re.findall("[a-zA-Z0-9]+", token))
         	count=0
 		temp_string="$"+token+"$"
 		while count < len(temp_string)-1:
 			bi_gram= temp_string[count:count+2]
 			kgram_index[bi_gram].add(token)
 			count +=1
-	#print kgram_index
 
 def add_k_gram_Index_prebuilt():
 	global inverted_index
+	global kgram_index
 	inverted_index=boolean_retrieval.get_Inverted_Index()
+#	if os.path.exists("kgram_index.pickle"):
+#		print "Loading from kgram_index.pickle "
+#		kgram_index = pickle.load( open( "kgram_index.pickle", "rb" ) )
+ #       	print " Total K_Gram Keys ",len(kgram_index)
+#		return
 	for token in inverted_index.keys():
 		count=0
                 temp_string="$"+token+"$"
@@ -49,11 +51,10 @@ def add_k_gram_Index_prebuilt():
 			bi_gram= temp_string[count:count+2]
                         kgram_index[bi_gram].add(token)
                         count +=1
-        print " Total K_Gram Keys ",len(kgram_index)
-
-
-
-
+	if not os.path.exists("kgram_index.pickle"):
+		print "creating kgram_index.pickle "
+		pickle.dump( kgram_index, open( "kgram_index.pickle", "wb" ) )
+        #print " Total K_Gram Keys ",len(kgram_index)
 
 			
 def kgram_query(elem):
@@ -62,17 +63,21 @@ def kgram_query(elem):
 	 result_words=set([])
 	 result_docId_list=[]
 	 present=0
+	 end=0
+	 start=0
 	 list_of_bigrams=[]
 	 if elem.startswith("*"):
 	 	 present=1
 	 	 word="".join(re.findall("[a-zA-Z0-9]+", elem))
 		 temp_string.append(word + "$")
 		 match_string.append(word)
+		 start=1
 	 elif elem.endswith("*"):
 	 	 present=1
 	 	 word="".join(re.findall("[a-zA-Z0-9]+", elem))
 		 temp_string.append("$" + word)
 		 match_string.append(word)
+		 end=1
 	 else:
 	         match = re.search(r'([a-zA-Z0-9]+)\*([a-zA-Z0-9]+)', elem)
 		 if match:
@@ -93,18 +98,27 @@ def kgram_query(elem):
 			 list_of_bigrams.append(kgram_index[bi_gram])
 			 count +=1
 	 common_word_list =set(list_of_bigrams[0]).intersection(*list_of_bigrams[1:])
-	 #print common_word_list
 	 for word in common_word_list:
-		 for val in match_string:
-			if(word.find(val) != -1):
+		 if start==1:
+			 val=match_string[0]
+			 if word.endswith(val):
 				 result_words.add(word)
-	 #print result_words
+	         elif end==1:
+			 val=match_string[0]
+		         if word.startswith(val):
+				 result_words.add(word)
+		 else:
+			 if len(match_string)==2:
+				 val1=match_string[0]
+				 val2=match_string[1]
+				 if word.startswith(val1) and word.endswith(val2) and len(word)>=2:
+					 result_words.add(word)
+			 else:
+				 print " Error * not found in middle "
+
 	 for word in result_words:
-		 #print word
 		 result_docId_list.append(inverted_index[word])
-	 #print result_docId_list
 	 final_docId_list =set(result_docId_list[0]).union(*result_docId_list[1:])
-         #print final_docId_list
 	 return final_docId_list
 
 
@@ -116,31 +130,21 @@ def search(query):
 def searchfn():
         while(1):
                 search_string=raw_input('Enter your search string here: ')
-#		temp_string=
-#		for x in search_string:
-#			if x=="\"":
 				
                 search_list=search_string.split("\"")
                 final_list=[]
                 for elem in search_list:
                         if elem:
                                 final_list.append(elem.strip())
-                #print final_list
                 result_found=0
                 for elem in final_list:
                         ret = kgram_query(elem)
                         if ret == 0: break
-                #if result_found:
-                #        result =set(new_list[0]).intersection(*new_list[1:])
-                #        print result
-                #else:
-                #        print "sorry no match :("
 
 
 def main():
         print "Loading Index"
 	add_k_gram_Index_prebuilt()
-        #build_index()
         searchfn()
 
 

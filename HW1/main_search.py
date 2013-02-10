@@ -70,9 +70,10 @@ def searchfn():
 		printresult(common_word_list)
 
 def printresult(result):
+	print 
+	print "----- Result------"
+	print "Count :",len(result)
 	if result:
-		print 
-		print "----- Result------"
 		for elem in result:
 			print elem," ",
 	else:
