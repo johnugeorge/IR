@@ -1,0 +1,50 @@
+copy boolean_retrieval.py main_search.py phrase_query.py kgram_index.py to any folder.
+
+How to Run
+
+python main_search.py <relative path to your books folder>
+
+When executed for first time,it creates separate pickle file for indexes created for Inverted Index(for boolean retrieval),Positional Index( Phrase Query), K-Gram Index(Wild Card Query) in the same location where script is executed . It takes ~ 1 min when loaded for the first time and 30s for subsequent loading of indexes. The value 'k' is set to 2 for building k-gram index(bigram).
+
+Once, Indexes are loaded, you will get following Prompt
+
+Enter your search string here.(Press CTRL+C to quit) :
+
+
+Give each query and see the Results.You can continue giving queries and press CTRL+C to quit.
+
+eg:
+
+python main_search.py ../Desktop/IR/HW1/books
+
+Loading Indexes
+
+creating boolean_retrieval.pickle 
+creating kgram_index.pickle 
+creating phrase_query.pickle 
+ Indexes Loaded 
+
+Enter your search string here.(Press CTRL+C to quit) :quixo* "mark twain"
+Phrase Queries:  ['mark twain']
+WildCard Queries: ['quixo*']
+Boolean Queries:  []
+
+----- Result------
+Count : 4
+245   76   416   543  
+
+Enter your search string here.(Press CTRL+C to quit) :"mark twain" "what is man"
+Phrase Queries:  ['mark twain', 'what is man']
+WildCard Queries: []
+Boolean Queries:  []
+
+----- Result------
+Count : 2
+119   70  
+
+Enter your search string here.(Press CTRL+C to quit) :^C
+You pressed Ctrl+C!..Quiting
+
+
+
+

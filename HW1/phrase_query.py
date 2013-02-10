@@ -6,14 +6,14 @@ from collections import defaultdict
 
 token_to_docId= defaultdict(list)
 result_dict   = defaultdict(list)
-def build_index():
+def build_index(dir='books'):
 	global token_to_docId
 #	if os.path.exists("phrase_query.pickle"):
 #		print "Loading from phrase_query.pickle "
 #                token_to_docId = pickle.load( open( "phrase_query.pickle", "rb" ) )
 #		print " Total Postional Index Keys ",len(token_to_docId)
 #                return
-	dir='books'
+#	dir='books'
 	filenames = os.listdir(dir)
 	for filename in filenames:
 	        rel_path=os.path.join(dir, filename)
@@ -27,7 +27,7 @@ def build_index():
 	if not os.path.exists("phrase_query.pickle"):
 		print "creating phrase_query.pickle "
 		pickle.dump( token_to_docId, open( "phrase_query.pickle", "wb" ) )
-#	print " Total Postional Index Keys ",len(token_to_docId)
+	#print " Total Postional Index Keys ",len(token_to_docId)
 	
 def add_Positional_Index(doc_Id,buf):
         tokens=re.findall(r"[\w]+", buf)

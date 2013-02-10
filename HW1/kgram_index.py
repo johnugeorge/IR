@@ -35,10 +35,10 @@ def add_kgram_Index(doc_Id,buf):
 			kgram_index[bi_gram].add(token)
 			count +=1
 
-def add_k_gram_Index_prebuilt():
+def add_k_gram_Index_prebuilt(dir='books'):
 	global inverted_index
 	global kgram_index
-	inverted_index=boolean_retrieval.get_Inverted_Index()
+	inverted_index=boolean_retrieval.get_Inverted_Index(dir)
 #	if os.path.exists("kgram_index.pickle"):
 #		print "Loading from kgram_index.pickle "
 #		kgram_index = pickle.load( open( "kgram_index.pickle", "rb" ) )

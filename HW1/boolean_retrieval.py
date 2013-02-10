@@ -5,14 +5,14 @@ from collections import defaultdict
 
 new_hash=defaultdict(set)
 
-def build_index():
+def build_index(dir='books'):
 	global new_hash
 #	if os.path.exists("boolean_retrieval.pickle"):
 #		print "Loading from boolean_retrieval.pickle "
 #		new_hash = pickle.load( open( "boolean_retrieval.pickle", "rb" ) )
 #		print " Total Inverted Index Keys ",len(new_hash)
 #		return new_hash
-	dir='books'
+#	dir='books'
 	filenames = os.listdir(dir)
 	for filename in filenames:
 	        rel_path=os.path.join(dir, filename)
@@ -35,8 +35,8 @@ def add_Inverted_Index(doc_Id,tokens):
 		token="".join(re.findall("[a-zA-Z0-9]+", token))
 		new_hash[token].add(doc_Id)
 
-def get_Inverted_Index():
-	build_index()
+def get_Inverted_Index(dir = 'books'):
+	build_index(dir)
 	return new_hash
 
 def searchfn():

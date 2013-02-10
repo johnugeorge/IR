@@ -4,17 +4,18 @@ import phrase_query
 import kgram_index
 import signal
 import sys
+import os
 
 def handler(signal, frame):
 	print
 	print 'You pressed Ctrl+C!..Quiting'
 	sys.exit(0)
 
-def searchfn():
+def searchfn(dir):
 	print "Loading Indexes"
 	print
-	kgram_index.add_k_gram_Index_prebuilt()
-	phrase_query.build_index()
+	kgram_index.add_k_gram_Index_prebuilt(dir)
+	phrase_query.build_index(dir)
 	print " Indexes Loaded "
 	print
         while(1):
@@ -83,7 +84,14 @@ def printresult(result):
 
 def main():
 	signal.signal(signal.SIGINT, handler)
-        searchfn()
+	if len(sys.argv) !=2:
+		print " Less no arguments. Give relative path to your folder as a argument"
+		exit(0)
+	dir=sys.argv[1]
+	if not os.path.exists(dir):
+		print "Folder doesn't exist"
+		exit(0)
+        searchfn(dir)
 
 
 if __name__ == '__main__':
