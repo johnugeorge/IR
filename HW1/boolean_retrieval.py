@@ -18,20 +18,16 @@ def build_index():
                 tokens=re.findall(r"[\w]+", buf)
 		add_Inverted_Index(doc_Id,tokens)
 		f.close()
-	print " Total Keys ",len(new_hash)
+	print " Total Inverted Index Keys ",len(new_hash)
 	
 def add_Inverted_Index(doc_Id,tokens):
 	for token in tokens:
 		token=token.lower()
 		new_hash[token].add(doc_Id)
-	      #  new_list=[]
-		#if not token in new_hash:
-		#	new_list.append(doc_Id)
-		#else:
-		#	new_list=new_hash[token]
-		#	new_list.append(doc_Id)
 
-		#new_hash[token] =new_list
+def get_Inverted_Index():
+	build_index()
+	return new_hash
 
 def searchfn():
 	while(1):
@@ -53,6 +49,11 @@ def searchfn():
 	        else:
 		        print "sorry no match :("
 
+def search(query):
+	if query in new_hash:
+		return new_hash[query]
+	else:
+		return []
 
 def main():
 	print "Loading Index"

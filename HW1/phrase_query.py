@@ -10,7 +10,7 @@ def build_index():
 	filenames = os.listdir(dir)
 	#filenames =['70.txt','119.txt']
 	for filename in filenames:
-		print "Filename",filename
+		#print "Filename",filename
 	        rel_path=os.path.join(dir, filename)
 		match=re.search(r'([\d]+).txt', filename)
                 if match:
@@ -22,7 +22,7 @@ def build_index():
 		add_Positional_Index(doc_Id,buf)
 		f.close()
 		#break
-	print " Total Keys ",len(token_to_docId)
+	print " Total Postional Index Keys ",len(token_to_docId)
 	
 def add_Positional_Index(doc_Id,buf):
         tokens=re.findall(r"[\w]+", buf)
@@ -51,7 +51,7 @@ def phrase_query(phrase):
 	result_found=1
 	tokens=re.findall(r"[\w]+", phrase)
 	final_result=[]
-	print "TOKENS",tokens
+	#print "TOKENS",tokens
 	positonal_lists=[]
 	temp_list=[]
 	for token in tokens:
@@ -84,12 +84,18 @@ def phrase_query(phrase):
 		temp_list=[]
 		for token in tokens:
 			temp_list.append(result_dict[token][doc])
-			print "doc",doc,"token",token,"temp list",temp_list
+			#print "doc",doc,"token",token,"temp list",temp_list
                 final_positional_list=set(temp_list[0]).intersection(*temp_list[1:])
-		print final_positional_list
+		#print final_positional_list
 		if final_positional_list:
 			result_docId.append(doc)
-	print "-----------Result-----------", result_docId
+	#print "-----------Result-----------", result_docId
+	return result_docId
+
+def search(query):
+        #build_index()
+	result=phrase_query(query)
+	return result
 
 
 
@@ -101,7 +107,7 @@ def searchfn():
 		for elem in search_list:
 			if elem:
 				final_list.append(elem.strip())
-	        print final_list
+	        #print final_list
 	        result_found=0
 		for elem in final_list:
 			ret = phrase_query(elem)
