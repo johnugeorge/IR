@@ -25,16 +25,13 @@ def loadTweets(fileloc):
         json_data.close()
         for line in buf:
                 data=json.loads(line)
-		#print data
 		tokens=re.findall(r"[\w]+", data['text'],re.UNICODE)
-#		tokens=re.split(" |'|\"", data['text'],re.UNICODE)
-		print data['text'].encode('utf8')
+		#print data['text'].encode('utf8')
 		id_val=data['id']
-		#print id_val
 		add_values_to_dict(tokens,id_val)
-		if count == 4:
-			break
-		count+=1
+		#if count == 4:
+		#	break
+		#count+=1
 	total_docs=len(main_dict)
 	calculate_idf_value(total_docs)
 	print len(main_dict)
@@ -43,7 +40,7 @@ def loadTweets(fileloc):
 	calculate_tf_idf_value()
 	#printdict()
 	normalize_tf_idf_value()
-	printdict()
+	#printdict()
 	#print document_freq_dict
                 #data.append(json.loads(line))
 def normalize_tf_idf_value():
@@ -132,7 +129,7 @@ def calculate_cosine_values():
 			#print " doc ",doc,"token ",token ,"Query term ",query_dict[token], " Main Dict value ",main_dict[doc][token]
 			value=value+query_dict[token]*main_dict[doc][token]
 		bisect.insort(cosine_list,value)
-	print cosine_list[len(cosine_list)-10:]
+	print cosine_list[len(cosine_list)-50:]
 				
 		
 
