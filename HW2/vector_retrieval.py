@@ -12,6 +12,8 @@ def innerdict():
 main_dict=defaultdict(innerdict)
 query_dict=defaultdict(float)
 document_freq_dict=defaultdict(float)
+doc_id_to_text=defaultdict(str)
+resultSet=defaultdict(float)
 
 def handler(signal, frame):
         print 'You pressed Ctrl+C!..Quiting'
@@ -28,6 +30,7 @@ def loadTweets(fileloc):
 		tokens=re.findall(r"[\w]+", data['text'],re.UNICODE)
 		#print data['text'].encode('utf8')
 		id_val=data['id']
+		doc_id_to_text[id_val]=data['text']
 		add_values_to_dict(tokens,id_val)
 		#if count == 4:
 		#	break
@@ -128,9 +131,24 @@ def calculate_cosine_values():
 		for token in query_dict:
 			#print " doc ",doc,"token ",token ,"Query term ",query_dict[token], " Main Dict value ",main_dict[doc][token]
 			value=value+query_dict[token]*main_dict[doc][token]
+		resultSet[doc]=value
 		bisect.insort(cosine_list,value)
-	print cosine_list[len(cosine_list)-50:]
+	results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
+	#print cosine_list[len(cosine_list)-50:]
+	return results
+	#print cosine_list[len(cosine_list)-50:]
 				
+def printResults(results,no_of_results):
+	global doc_id_to_text
+	count=1
+        for doc in reversed(results):
+		print "Rank ",count
+                print "Tweet Id in Corpus: ",doc[0]
+		print "Tweet Text: ",doc_id_to_text[doc[0]]
+		print
+                if count== no_of_results:
+                        break
+                count+=1
 		
 
 def main():
@@ -143,7 +161,8 @@ def main():
 	if ret == 0:
 		print "Not Found "
 		sys.exit(0)
-	calculate_cosine_values()
+	results=calculate_cosine_values()
+	printResults(results,50)
         print "done"
 
 

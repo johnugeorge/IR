@@ -94,7 +94,10 @@ def printResult(results, no_of_results):
 		if user[0] not in incoming_graph:
 			continue
 		user_id=logical_no_to_user_id[user[0]]
-		print user_id,":", user_id_to_screen_name[user_id]
+		print "Rank: ",count
+		print "User Id: ",user_id
+		print "Screen Name: ",user_id_to_screen_name[user_id]
+		print
 		if count== no_of_results:
 			break
 		count+=1
