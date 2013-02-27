@@ -11,9 +11,11 @@ userCount=-1
 alpha_factor=0.1
 prec=0.00001
 user_id_to_logical_no=defaultdict(int)
+logical_no_to_user_id=defaultdict(int)
 user_id_to_screen_name=defaultdict(str)
 incoming_graph=defaultdict(set)
 outgoing_graph=defaultdict(set)
+resultSet=defaultdict(float)
 
 def innerdict():
         return defaultdict(float)
@@ -29,7 +31,7 @@ def loadTweets(fileloc):
                 tokens=re.findall(r"[\w]+", data['text'],re.UNICODE)
 		process_data(data)
                 #id_val=data['id']
-                #if count == 4:
+                #if count == 5:
                 #       break
                 #count+=1
 	#print  user_id_to_logical_no
@@ -42,16 +44,16 @@ def loadTweets(fileloc):
 	print len(user_id_to_screen_name)
 	print len(outgoing_graph)
 	print len(incoming_graph)
-	calculate_pagerank()
 
 
 def calculate_pagerank():
 	total_users=len(user_id_to_logical_no)
-	#pagerank_list=[1]* total_users
-	pagerank_list=ones(total_users)
+	pagerank_list=[1]* total_users
+	#pagerank_list=ones(total_users)
 	value=0
 	iteration=1
-	new_pagerank_list=pagerank_list.copy()
+	#new_pagerank_list=pagerank_list.copy()
+	new_pagerank_list=pagerank_list[:]
 	#print " New PageRank ",new_pagerank_list
 	while 1:
 		count=0
@@ -59,21 +61,41 @@ def calculate_pagerank():
 			if count in incoming_graph:
 				for elem in incoming_graph[count]:
 					total_outgoing_links=len(outgoing_graph[elem])
-					value=value+pagerank_list[elem]/total_outgoing_links
+					prev_pr=pagerank_list[elem]
+					value=value+prev_pr/total_outgoing_links
 					#print "Value ",value
 			new_pagerank_list[count]=alpha_factor + (1- alpha_factor)*value
 			value=0
 		#	print " In loop  PageRank ",new_pagerank_list ," count ",count
 			
 			count+=1
-		diff=new_pagerank_list-pagerank_list
-		print "Iterations needed ",iteration
-		if(((abs(diff)) <= prec).all()):
-			break
-		pagerank_list=new_pagerank_list
+		#diff=new_pagerank_list-pagerank_list
+		diff=[x-y for x,y in zip(new_pagerank_list,pagerank_list)]
+		#print "Iterations needed ",iteration
+		if all([math.fabs(item) <= prec for item in diff]):
+			print "Iterations needed ",iteration
+			iter_val=0
+			for val in new_pagerank_list:
+				resultSet[iter_val]=new_pagerank_list[iter_val]
+				iter_val+=1
+			results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
+			print results[-20:]
+			return results
+		#if(((abs(diff)) <= prec).all()):
+		#	break
+		#pagerank_list=new_pagerank_list.copy()
+		pagerank_list=new_pagerank_list[:]
 		iteration+=1
 		
 					
+def printResult(results, no_of_results):
+	count=1
+	for user in reversed(results):
+		user_id=logical_no_to_user_id[user[0]]
+		print user_id, user_id_to_screen_name[user_id]
+		if count== no_of_results:
+			break
+		count+=1
 	
 
 def process_data(data):
@@ -83,6 +105,7 @@ def process_data(data):
 	if user_id not in user_id_to_logical_no:
 		userCount+=1
 		user_id_to_logical_no[user_id] = userCount
+		logical_no_to_user_id[userCount]=user_id
 		user_id_to_screen_name[user_id]= data['user']['screen_name']
 		main_id=userCount;
 	else:
@@ -96,6 +119,7 @@ def process_data(data):
 			#print "User Id ",userCount , " Tweet user id ",mention_id, " Screen name ",user['screen_name']
 			userCount+=1
                 	user_id_to_logical_no[mention_id] = userCount
+			logical_no_to_user_id[userCount]=mention_id
 			user_id_to_screen_name[mention_id]= user['screen_name']
 			create_links(main_id,userCount)
 		else:	
@@ -118,13 +142,8 @@ def main():
         #signal.signal(signal.SIGINT, handler)
         fileloc="../../mars_tweets_medium.json"
         loadTweets(fileloc)
-	sys.exit(0)
-        search_string=raw_input('Enter your search string here.(Press CTRL+C to quit) :')
-        ret =parse_and_compute(search_string)
-        if ret == 0:
-                print "Not Found "
-                sys.exit(0)
-        calculate_cosine_values()
+        results=calculate_pagerank()
+	printResult(results,20)
         print "done"
 
 
