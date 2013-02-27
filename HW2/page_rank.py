@@ -79,7 +79,7 @@ def calculate_pagerank():
 				resultSet[iter_val]=new_pagerank_list[iter_val]
 				iter_val+=1
 			results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-			print results[-20:]
+			#print results[-20:]
 			return results
 		#if(((abs(diff)) <= prec).all()):
 		#	break
@@ -91,8 +91,10 @@ def calculate_pagerank():
 def printResult(results, no_of_results):
 	count=1
 	for user in reversed(results):
+		if user[0] not in incoming_graph:
+			continue
 		user_id=logical_no_to_user_id[user[0]]
-		print user_id, user_id_to_screen_name[user_id]
+		print user_id,":", user_id_to_screen_name[user_id]
 		if count== no_of_results:
 			break
 		count+=1
@@ -143,7 +145,7 @@ def main():
         fileloc="../../mars_tweets_medium.json"
         loadTweets(fileloc)
         results=calculate_pagerank()
-	printResult(results,20)
+	printResult(results,50)
         print "done"
 
 
