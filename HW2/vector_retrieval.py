@@ -14,6 +14,7 @@ query_dict=defaultdict(float)
 document_freq_dict=defaultdict(float)
 doc_id_to_text=defaultdict(str)
 resultSet=defaultdict(float)
+doc_id_to_user_id=defaultdict(int)
 
 def handler(signal, frame):
         print 'You pressed Ctrl+C!..Quiting'
@@ -31,6 +32,7 @@ def loadTweets(fileloc):
 		#print data['text'].encode('utf8')
 		id_val=data['id']
 		doc_id_to_text[id_val]=data['text']
+		doc_id_to_user_id[id_val]=data['user']['id']
 		add_values_to_dict(tokens,id_val)
 		#if count == 4:
 		#	break
@@ -39,13 +41,9 @@ def loadTweets(fileloc):
 	calculate_idf_value(total_docs)
 	print len(main_dict)
 	print len(document_freq_dict)
-	#printdict()
 	calculate_tf_idf_value()
-	#printdict()
 	normalize_tf_idf_value()
-	#printdict()
-	#print document_freq_dict
-                #data.append(json.loads(line))
+
 def normalize_tf_idf_value():
 	for doc in main_dict:
 		square=0;
@@ -125,24 +123,22 @@ def parse_and_compute(query):
 	return 1
 
 def calculate_cosine_values():
-	cosine_list=[]
 	for doc in main_dict:
 		value=0
 		for token in query_dict:
-			#print " doc ",doc,"token ",token ,"Query term ",query_dict[token], " Main Dict value ",main_dict[doc][token]
-			value=value+query_dict[token]*main_dict[doc][token]
-		resultSet[doc]=value
-		bisect.insort(cosine_list,value)
+			if token in main_dict[doc]:
+				#print " doc ",doc,"token ",token ,"Query term ",query_dict[token], " Main Dict value ",main_dict[doc][token]
+				value=value+query_dict[token]*main_dict[doc][token]
+		if value > 0:
+			resultSet[doc]=value
 	results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-	#print cosine_list[len(cosine_list)-50:]
 	return results
-	#print cosine_list[len(cosine_list)-50:]
 				
 def printResults(results,no_of_results):
 	global doc_id_to_text
 	count=1
         for doc in reversed(results):
-		print "Rank ",count
+		print "Rank ",count," Value ",doc[1]
                 print "Tweet Id in Corpus: ",doc[0]
 		print "Tweet Text: ",doc_id_to_text[doc[0]]
 		print
@@ -150,6 +146,24 @@ def printResults(results,no_of_results):
                         break
                 count+=1
 		
+def cal_tf_idf_value(fileloc,search_string):
+	global query_dict
+	global resultSet
+	query_dict=defaultdict(float)
+	resultSet=defaultdict(float)
+	returnSet=defaultdict(list)
+	ret =parse_and_compute(search_string)
+	if ret == 0:
+		return returnSet
+	results=calculate_cosine_values()
+	for doc in reversed(results):
+		tweet_id=doc[0]
+		returnSet[tweet_id].append(doc[1])
+		returnSet[tweet_id].append(doc_id_to_user_id[doc[0]])
+		returnSet[tweet_id].append(doc_id_to_text[doc[0]])
+	print len(returnSet)
+        return returnSet
+
 
 def main():
         print "start"

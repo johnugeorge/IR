@@ -141,6 +141,14 @@ def create_links(parent_id,mention_id):
 	if mention_id not in outgoing_graph:
 		outgoing_graph[mention_id]=set()
 	
+def cal_doc_page_rank(fileloc):
+	global resultDict
+	resultDict=defaultdict(float)
+	loadTweets(fileloc)
+        results=calculate_pagerank()
+	for elem in results:
+		resultDict[logical_no_to_user_id[elem[0]]]=elem[1]
+	return resultDict
 
 def main():
         print "start"
