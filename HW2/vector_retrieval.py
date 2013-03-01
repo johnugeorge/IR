@@ -97,6 +97,8 @@ def calculate_idf_value(total_docs):
 		document_freq_dict[token]=math.log(total_docs/value,2)
        
 def parse_and_compute(query):
+	global query_dict
+        query_dict=defaultdict(float)
 	square=0
 	tokens=re.findall(r"[\w]+", query,re.UNICODE)
 	for token in tokens:
@@ -123,6 +125,8 @@ def parse_and_compute(query):
 	return 1
 
 def calculate_cosine_values():
+	global resultSet
+	resultSet=defaultdict(float)
 	for doc in main_dict:
 		value=0
 		for token in query_dict:
@@ -147,10 +151,6 @@ def printResults(results,no_of_results):
                 count+=1
 		
 def cal_tf_idf_value(fileloc,search_string):
-	global query_dict
-	global resultSet
-	query_dict=defaultdict(float)
-	resultSet=defaultdict(float)
 	returnSet=defaultdict(list)
 	ret =parse_and_compute(search_string)
 	if ret == 0:
@@ -167,16 +167,17 @@ def cal_tf_idf_value(fileloc,search_string):
 
 def main():
         print "start"
-        #signal.signal(signal.SIGINT, handler)
+        signal.signal(signal.SIGINT, handler)
         fileloc="../../mars_tweets_medium.json"
         loadTweets(fileloc)
-	search_string=raw_input('Enter your search string here.(Press CTRL+C to quit) :')
-	ret =parse_and_compute(search_string) 
-	if ret == 0:
-		print "Not Found "
-		sys.exit(0)
-	results=calculate_cosine_values()
-	printResults(results,50)
+	while 1:
+		search_string=raw_input('Enter your search string here.(Press CTRL+C to quit) :')
+		ret =parse_and_compute(search_string) 
+		if ret == 0:
+			print "Not Found "
+			continue
+		results=calculate_cosine_values()
+		printResults(results,50)
         print "done"
 
 

@@ -152,7 +152,6 @@ def cal_doc_page_rank(fileloc):
 
 def main():
         print "start"
-        #signal.signal(signal.SIGINT, handler)
         fileloc="../../mars_tweets_medium.json"
         loadTweets(fileloc)
         results=calculate_pagerank()
