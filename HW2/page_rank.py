@@ -9,7 +9,7 @@ from collections import defaultdict
 
 userCount=-1
 alpha_factor=0.1
-prec=0.00001
+prec=0.00000001
 user_id_to_logical_no=defaultdict(int)
 logical_no_to_user_id=defaultdict(int)
 user_id_to_screen_name=defaultdict(str)
@@ -48,7 +48,7 @@ def loadTweets(fileloc):
 
 def calculate_pagerank():
 	total_users=len(user_id_to_logical_no)
-	pagerank_list=[1]* total_users
+	pagerank_list=[1.0]* total_users
 	#pagerank_list=ones(total_users)
 	value=0
 	iteration=1
@@ -63,10 +63,12 @@ def calculate_pagerank():
 					total_outgoing_links=len(outgoing_graph[elem])
 					prev_pr=pagerank_list[elem]
 					value=value+prev_pr/total_outgoing_links
+                                        #print "Value ",value," total outgoing ",total_outgoing_links," prev_pr",prev_pr ,"pagerank_list ",pagerank_list, " elem",elem
+
 					#print "Value ",value
 			new_pagerank_list[count]=alpha_factor + (1- alpha_factor)*value
 			value=0
-		#	print " In loop  PageRank ",new_pagerank_list ," count ",count
+			#print " In loop  PageRank ",new_pagerank_list ," count ",count
 			
 			count+=1
 		#diff=new_pagerank_list-pagerank_list
@@ -152,7 +154,8 @@ def cal_doc_page_rank(fileloc):
 
 def main():
         print "start"
-        fileloc="../../mars_tweets_medium.json"
+        #fileloc="../../mars_tweets_medium.json"
+        fileloc="test2.query"
         loadTweets(fileloc)
         results=calculate_pagerank()
 	printResult(results,50)

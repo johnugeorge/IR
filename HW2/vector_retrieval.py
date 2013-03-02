@@ -39,16 +39,23 @@ def loadTweets(fileloc):
 		#count+=1
 	total_docs=len(main_dict)
 	calculate_idf_value(total_docs)
-	print len(main_dict)
-	print len(document_freq_dict)
+	#print len(main_dict)
+	#print len(document_freq_dict)
+	#print main_dict
 	calculate_tf_idf_value()
+	#print main_dict
 	normalize_tf_idf_value()
 
 def normalize_tf_idf_value():
+	global main_dict
 	for doc in main_dict:
-		square=0;
+		square=0
 		for term in main_dict[doc]:
+			#print  main_dict[doc][term] , term
 			square=square+ main_dict[doc][term]* main_dict[doc][term]
+		#print "square",square," doc ",doc
+		if square == 0:
+			continue
 		sq_root=math.sqrt(square)
 		for term in main_dict[doc]:
 			value= main_dict[doc][term]
@@ -144,7 +151,7 @@ def printResults(results,no_of_results):
         for doc in reversed(results):
 		print "Rank ",count," Value ",doc[1]
                 print "Tweet Id in Corpus: ",doc[0]
-		print "Tweet Text: ",doc_id_to_text[doc[0]]
+		print "Tweet Text: ",doc_id_to_text[doc[0]].encode('utf-8')
 		print
                 if count== no_of_results:
                         break
@@ -161,7 +168,7 @@ def cal_tf_idf_value(fileloc,search_string):
 		returnSet[tweet_id].append(doc[1])
 		returnSet[tweet_id].append(doc_id_to_user_id[doc[0]])
 		returnSet[tweet_id].append(doc_id_to_text[doc[0]])
-	print len(returnSet)
+	#print len(returnSet)
         return returnSet
 
 
