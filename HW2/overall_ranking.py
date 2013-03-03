@@ -8,7 +8,7 @@ import vector_retrieval
 import page_rank
 from collections import defaultdict
 
-user_wt=0.3
+user_wt=0.5
 def handler(signal, frame):
         print 'You pressed Ctrl+C!..Quiting'
         sys.exit(0)
@@ -37,13 +37,17 @@ def main():
         fileloc="mars_tweets_medium.json"
 	sum_total=0.0
 	page_rank_results=page_rank.cal_doc_page_rank(fileloc)
-	for elem in page_rank_results:
-		sum_total=sum_total+page_rank_results[elem]
+	#for elem in page_rank_results:
+	#	sum_total=sum_total+page_rank_results[elem]
 	vector_retrieval.loadTweets(fileloc)
 	while 1:
 		updated_score_result=defaultdict(float)
 		search_string=raw_input('Enter your search string here.(Press CTRL+C to quit) :')
 		cosine_results = vector_retrieval.cal_tf_idf_value(fileloc,search_string)
+		for result in cosine_results:
+			user_id=(cosine_results[result])[1]
+			user_page_rank=page_rank_results[user_id]
+			sum_total=sum_total+user_page_rank
 		for doc in cosine_results:
 			user_id=(cosine_results[doc])[1]
 			user_page_rank=page_rank_results[user_id]
