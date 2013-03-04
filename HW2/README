@@ -1,0 +1,232 @@
+There are four files in zip.All python files assume that JSON file 'mars_tweets_medium.json' is present in the same directory where code is executed.
+
+
+1)part1.py(vector retrieval)
+       This displays top 50 tweets for cosine similarity values between tweets and query. The output contains top 50 Tweet Text's with its Tweet id's.
+
+How to run
+
+python part1.py
+
+Enter your search string here.(Press CTRL+C to quit):  MarsRover
+
+
+2)part2.py(page rank)
+    It displays top 50 page rank among users with User ID and User Screen Name
+
+How to run
+
+python page2.py
+
+
+
+3)part3.py(Integrated vector retrieval and page rank system)
+          This displays  top 50 tweets for combined values for cosine similarity and page rank values with Tweet Id's and Tweet Text
+	
+Implementation
+           For a particular query, all tweets with non-zero cosine similarity values are picked. Now,integrated score of pagerank of user who tweeted the text and cosine similarity value is used to sort the list of specified tweets again to get the final list 
+
+Formulae used:	
+		   integrated score= (user_wt)*normalized_pr + (1 - user_wt)*(cosine_results)
+		             where user_wt is a variable which can be set depending on the system configuration.It is a measure of the weights divided between pagerank of the user and cosine similarity of the tweet.Pageranks are normalized to values in range [0 1] so that computation of both measures are comparable.The advantage of this formulae is that user weight can be varied depending on user needs and more system evaluations can be made.
+
+Advantages:
+
+1. This system is advantageous than the vector retrieval method(Part1) as it gives importance also to the page rank of the user who tweeted. Higher the page rank, more popular the user and hence tweets would be more informative and popular. So, such tweets would be preferred over other which are tweeted by lower pageranked users since they are less popular. 		  
+ eg:
+ Following is the result of query term 'curiosity'  in vector retrieval
+ 
+ Rank  1  Value  1.0
+Tweet Id in Corpus:  232333582557908993
+Tweet Text:  #Curiosity
+
+Rank  2  Value  1.0
+Tweet Id in Corpus:  232332923880230912
+Tweet Text:  Curiosity
+
+Rank  3  Value  1.0
+Tweet Id in Corpus:  232332849674596352
+Tweet Text:  Curiosity!!!!!!!!
+
+Rank  4  Value  1.0
+Tweet Id in Corpus:  232332457880465408
+Tweet Text:  Curiosity
+
+Rank  5  Value  1.0
+Tweet Id in Corpus:  232332145694220288
+Tweet Text:  #curiosity
+
+
+Follwing is the result of query term 'curiosity'  in integrated system. All top 5 tweets have seen same cosine similarity values and it can be seen that top tweet Id is 232327356122005504 in Intergrated system since, we have given weightage to page rank also, rather than cosine similarity .
+
+ Rank  1  Final Score  0.500005044293
+Tweet Id in Corpus:  232327356122005504
+Tweet Text:  Curiosity
+
+Rank  2  Final Score  0.500002513877
+Tweet Id in Corpus:  232332145694220288
+Tweet Text:  #curiosity
+
+Rank  3  Final Score  0.500002513877
+Tweet Id in Corpus:  232324849069088768
+Tweet Text:  #Curiosity
+
+Rank  4  Final Score  0.500002513877
+Tweet Id in Corpus:  232320649861935104
+Tweet Text:  #Curiosity
+
+Rank  5  Final Score  0.500002513877
+Tweet Id in Corpus:  232318267358838785
+Tweet Text:  Curiosity.
+
+
+2, This system is advantageous than the page rank method(Part2) as it gives importance also to cosine similarity value between tf-idf value of tweets and query. All tweets,tweeted by higher page ranked users might not be relevant to all queries of the user.Tweet topic of a high page ranked user can be different from a user query. Hence,cosine similarity measure is important when results are displayed, which gives importance to tweet text.
+     Eg:It can be seen that Top tweet returned by the Integrated system(Tweet Id :232327356122005504) is tweeted by Charlie. If page rank alone was considered in returning results, tweets by top user 'MarsCuriosity' should have been returned , which is less similar to the query.
+
+
+3. Integrated score is preferred and gives much more relevant score rather than just taking cosine values or page rank of the users.The user weight taken in the formulae, can be varied according to the user requirements. If popularity of the user is more preferred in results, user weight must be higher while lower values of user weight, support similarity of query and tweets. The results prove the assumption.
+       eg:User weight of 0.5 was used in the evaluation of results.It can be varied according to the user requirements.
+
+
+How to run
+
+python part3.py
+
+
+Enter your search string here.(Press CTRL+C to quit):  MarsRover
+
+
+4)Part 4(Search Engine Optimization)
+
+Target Pages:    http://www.techtipsmaster.com
+		 http://www.techtipsmaster.com/urjnasw-xkfjjkn-search-engine-ranking-part-1.html
+
+This is my technical blog.All my pages are crawled and it is taking time to index all my incoming links to get higher ranking in search results.It is second page of bing and third page of google.
+
+Techniques used
+
+a.The document title (<title>),The <h1> tags,Home page meta descriptions, Home page meta keywords are most important elements in the document source for SEO.
+
+    urjnasw xkfjjkn is added in title,<H1>,Home page meta tag and in meta keywords, which will be used by search engines for analyzing content.View page source of homepage to see all tags.
+
+b.Usage of webmaster tools for google and bing.
+     Sitemaps are submitted to google and bing so that crawling rate is faster and hence changes can be easily seen in the search engines. Change frequency in the sitemaps are set to 'daily' for faster crawling of pages. Highly updated pages are ranked higher in search results rather than pages which are updated less frequently. Webmaster tool also displays the rankings of keyword and search keywords so that page can be optimized easily.Google analytics gives clear idea of present standing postion for keyword and various optimizations to be taken care of. Terms like 'Bouncing Rates' ,'Visitor Frequency' are important to webmasters.
+      
+	 http://www.techtipsmaster.com/sitemap.xml
+
+c.Social bookmarks are really helpful in reaching the site to bigger audience and this boosts up the search engine rankings as each pages are shared by others,multiple times. For this,I have added social bookmarking buttons(for facebook,twitter and stumbleupon) so that readers can easily share the posts to outside world to make the posts popular.
+        The pages are seen to be 'retweeted'(2 times) and shared in 'digg'(4 times) and facebook when readers found my posts interesting.  
+             eg. buttons in http://www.techtipsmaster.com/urjnasw-xkfjjkn-search-engine-ranking-part-1.html
+			    https://twitter.com/TechTipsMaster
+
+d. Related and Quality content and keywords
+          I have posted related content of high quality about search engine optimization and various white hat techniques in multiple posts. Search Engines may penalize pages which contain unrelated terms and non-comparable niche terms. I have created new keywords and tags for 'urjnasw xkfjjkn' so that pages are linked with those keywords easily by the search engines.
+
+e.Blog directories and Do follow Links from higher page ranked pages
+            Most of the forums and blogs have do-follow signature or footer links where links can be added which can boost up the page rank and hence search results.
+      eg:https://forums.digitalpoint.com/members/jakesjohn.238122/ 
+                 I have added target links in signature and as home page link , which will drive more traffic and page rank.The target links will be displayed in the bottom of all my posts, More the number of posts I make, more do-follow backlinks from good authorities. Most of the pages containing my posts, have higher page ranks and thus I have good number of backlinks. 
+                 Blog directories are good resources for right keywords and pages will be crawled and ranked higher if blogs are added in high page rank blog directories. It may take some time by google to calculate all backlinks and to appear in search results for this keyword by the search engines. 
+                I have received backlinks from high pagerank sites. 
+		eg:in google,  link:techtipsmaster.com shows all 161 backlinks i have got from other sites
+
+f.Link Exchanges
+              I have done link exchange with high page rank website like http://sierraactivist.org/ which will definitely add to my pagerank and ranking status.
+
+5)Part 5(Bonus part-Topic Sensitive page rank)           
+
+How to run
+
+python part5.py
+
+
+Implementation:
+         A complete graph of user link structure is created. Separate datastrucures for outgoing and incoming links are added per user. Now, incoming graph is sorted and top 16 users are selected with maximum number of incoming links from other users. Each top user is assigned a label and all incoming and outgoing  links are also assigned with the same label.This is a good method for clustering the users as, users who are mentioning other users are highly likely to have common interests and topics and hence , they can be coupled together under same category.Teleportation factor is split among users in the same group so that random walker lands on some node, which is of same category.
+
+Evaluation
+         MarsCurioisity is the top user with maximum incoming links(19000+).But, it is seen as Rank 1 in only 3 categories. He is ranked differently in all different topics.Topic sensitive search is much more powerful as it gives more weightage to nodes in the same category.Teleportation factor is divided only among users in the same group.
+         MarsCuriosity is good resource for many topics but not strongly relevant in all topics.Hence, some users are ranked better than MarsCuriosity even if number of incoming links are really large.
+         MarsCuriosity is #9 in 'Computers' category,#10 in 'Home' category,#1 in 'Recreation',#2 in 'Reference',#1 in 'Science' category,#10 in 'Regional' category,#6 in 'Shopping' category,#8 in 'sports' category,#10 in 'world' category. Sample Results for two categories are 
+
+============ Results for HOME ===============
+Rank:  1  Rank Value  8.70248261414e-05
+User Id:  19024627
+Screen Name:  joshgreenman
+
+Rank:  2  Rank Value  6.56578823674e-08
+User Id:  104248138
+Screen Name:  mattderienzo
+
+Rank:  3  Rank Value  6.56578823674e-08
+User Id:  288038830
+Screen Name:  CTTechjunkie
+
+Rank:  4  Rank Value  4.6783006807e-08
+User Id:  534723845
+Screen Name:  Salammbo9
+
+Rank:  5  Rank Value  4.47067966499e-08
+User Id:  632222556
+Screen Name:  explorezmars
+
+Rank:  6  Rank Value  3.86624487762e-08
+User Id:  41121600
+Screen Name:  CNES_France
+
+Rank:  7  Rank Value  2.38972321087e-08
+User Id:  125830272
+Screen Name:  dramadiffusion
+
+Rank:  8  Rank Value  2.32200766359e-08
+User Id:  239909926
+Screen Name:  spacelivecast
+
+Rank:  9  Rank Value  1.05163758486e-08
+User Id:  527707074
+Screen Name:  Mars_VL
+
+Rank:  10  Rank Value  5.84987853406e-09
+User Id:  15473958
+Screen Name:  MarsCuriosity
+
+============ Results for RECREATION ===============
+Rank:  1  Rank Value  8.42293749439e-05
+User Id:  15473958
+Screen Name:  MarsCuriosity
+
+Rank:  2  Rank Value  8.14131816403e-05
+User Id:  397655438
+Screen Name:  SciShow
+
+Rank:  3  Rank Value  2.63842805636e-05
+User Id:  534723845
+Screen Name:  Salammbo9
+
+Rank:  4  Rank Value  2.52187383356e-05
+User Id:  632222556
+Screen Name:  explorezmars
+
+Rank:  5  Rank Value  2.17972659757e-05
+User Id:  41121600
+Screen Name:  CNES_France
+
+Rank:  6  Rank Value  2.07818761538e-05
+User Id:  20612844
+Screen Name:  davelavery
+
+Rank:  7  Rank Value  1.61571596011e-05
+User Id:  12702822
+Screen Name:  starstryder
+
+Rank:  8  Rank Value  1.38636739952e-05
+User Id:  15947277
+Screen Name:  marsroverdriver
+
+Rank:  9  Rank Value  1.34715976651e-05
+User Id:  125830272
+Screen Name:  dramadiffusion
+
+Rank:  10  Rank Value  1.2316196688e-05
+User Id:  49573859
+Screen Name:  iamwill
+

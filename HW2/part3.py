@@ -4,8 +4,8 @@ import sys
 import json
 import math
 import bisect
-import vector_retrieval
-import page_rank
+import part1
+import part2
 from collections import defaultdict
 
 user_wt=0.5
@@ -36,14 +36,14 @@ def main():
         signal.signal(signal.SIGINT, handler)
         fileloc="mars_tweets_medium.json"
 	sum_total=0.0
-	page_rank_results=page_rank.cal_doc_page_rank(fileloc)
+	page_rank_results=part2.cal_doc_page_rank(fileloc)
 	#for elem in page_rank_results:
 	#	sum_total=sum_total+page_rank_results[elem]
-	vector_retrieval.loadTweets(fileloc)
+	part1.loadTweets(fileloc)
 	while 1:
 		updated_score_result=defaultdict(float)
 		search_string=raw_input('Enter your search string here.(Press CTRL+C to quit) :')
-		cosine_results = vector_retrieval.cal_tf_idf_value(fileloc,search_string)
+		cosine_results = part1.cal_tf_idf_value(fileloc,search_string)
 		for result in cosine_results:
 			user_id=(cosine_results[result])[1]
 			user_page_rank=page_rank_results[user_id]
@@ -55,7 +55,7 @@ def main():
 			score= (user_wt)*normalized_pr + (1 - user_wt)*(cosine_results[doc])[0]
 			updated_score_result[doc]=score
 		results=[(key,val) for key, val in sorted(updated_score_result.iteritems(), key=lambda (k,v): (v,k))]
-		printResults(results,cosine_results,10)		
+		printResults(results,cosine_results,50)		
 		print	
         print "done"
 
