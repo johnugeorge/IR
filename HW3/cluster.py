@@ -15,7 +15,7 @@ document_freq_dict=defaultdict(float)
 doc_id_to_tokens=defaultdict(list)
 cluster_set=defaultdict(list)
 resultSet=defaultdict(float)
-k_value=2
+k_value=9
 
 
 def handler(signal, frame):
@@ -46,7 +46,7 @@ def loadQueries(fileloc):
 	calculate_idf_value(total_doc_count)
 	calculate_tf_idf_value()
 	normalize_tf_idf_value()
-	print main_dict
+	#print main_dict
 	ececute_k_means(total_doc_count)
 
 
@@ -58,9 +58,85 @@ def ececute_k_means(total_doc_count):
 	root_nodes=create_random_root_nodes(total_doc_count)
 	for doc in main_dict:
 		calculate_nearest_node(doc,root_nodes)
-	print cluster_set
+	calculate_centroid()
+	#print cluster_set
+	initial_rss=calculate_rss()
+	call_iterations(initial_rss)
 
-#def print_tables(cluster_set):
+def call_iterations(rss_value):
+	prev_rss_val=rss_value
+	count=1
+	while True:
+		for elem in cluster_set:
+			cluster_set[elem][1].clear()
+		for doc in main_dict:
+			recalculate_cluster_nodes(doc)
+		calculate_centroid()
+		present_rss_val=calculate_rss()
+		if present_rss_val == prev_rss_val:
+			print "Same RSS ",present_rss_val
+			print "Total Iterations ",count
+			print
+			print " Results after Classification "
+			iter_val=1
+			for elem in cluster_set:
+				print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
+				iter_val+=1
+			#print "Final Set ",cluster_set
+			return
+		prev_rss_val = present_rss_val
+		count +=1
+		#print cluster_set
+
+def calculate_rss():
+	rss_val=0
+	for elem in cluster_set:
+		centroid_tokens=cluster_set[elem][0].keys()
+		for node in cluster_set[elem][1]:
+			doc_tokens=main_dict[node].keys()
+			doc_tokens.extend(centroid_tokens)
+			set_of_tokens=set(doc_tokens)
+			for token in set_of_tokens:
+				diff_val = main_dict[node][token] - cluster_set[elem][0][token]
+				rss_val += diff_val*diff_val
+	return rss_val
+
+
+def recalculate_cluster_nodes(doc):
+		global resultSet
+		resultSet=defaultdict(float)
+		for cluster in cluster_set:
+			value=0
+			for token in main_dict[doc]:
+				if token in cluster_set[cluster][0]:
+					value=value+main_dict[doc][token]*cluster_set[cluster][0][token]
+			if value > 0:
+				resultSet[cluster]=value
+		results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
+		#print "-----reclaculate results----", doc
+ 		#print results
+		#print "set ",cluster_set
+		if results:
+			nearest_root_node=results[-1][0]
+		else:
+			nearest_root_node=0
+		cluster_set[nearest_root_node][1].add(doc)
+		#print cluster_set
+		#print "-----results end----"
+
+
+def calculate_centroid():
+	for root_doc in cluster_set:
+		set_of_member_set=cluster_set[root_doc][1]
+		total_members=len(set_of_member_set)
+		cluster_centroid_vector=cluster_set[root_doc][0]
+		cluster_centroid_vector.clear()
+		for elem in set_of_member_set:
+			for term in main_dict[elem]:
+				cluster_centroid_vector[term] += main_dict[elem][term]
+		for term in cluster_centroid_vector:
+			cluster_centroid_vector[term]= cluster_centroid_vector[term]/total_members
+		cluster_set[root_doc][0]=cluster_centroid_vector
 
 
 def calculate_nearest_node(doc,root_nodes):
@@ -74,31 +150,31 @@ def calculate_nearest_node(doc,root_nodes):
 			if value > 0:
 				resultSet[root_doc]=value
 		results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-		print "-----results----", doc,root_nodes
- 		print results
-		print "set ",cluster_set
+		#print "----- calculate_nearest results----", doc,root_nodes
+ 		#print results
+		#print "set ",cluster_set
 		if results:
 			nearest_root_node=results[-1][0]
 		else:
-			print " adding node",root_nodes[0]
+			#print " adding node",root_nodes[0]
 			nearest_root_node=root_nodes[0]
-		cluster_set[nearest_root_node][1].add(doc)
-		print cluster_set
-		print "-----results end----"
+		cluster_set[root_nodes.index(nearest_root_node)][1].add(doc)
+		#print cluster_set
+		#print "-----results end----"
 
 def create_random_root_nodes(total_doc_count):
 	root_nodes=[]
-	init_array=[1,3]
-	count=0
+	#init_array=[1,4]
+	#count=0
 	while len(root_nodes) != k_value:
 		rand_val=random.randint(1, total_doc_count)
-		rand_val=init_array[count]
-		count+=1
+		#rand_val=init_array[count]
+		#count+=1
 		if rand_val not in root_nodes:
 			root_nodes.append(rand_val)
-			cluster_set[rand_val] = []
-			cluster_set[rand_val].append(0) #for centroid value
-			cluster_set[rand_val].append(set()) # for set of nodes
+			cluster_set[root_nodes.index(rand_val)] = []
+			cluster_set[root_nodes.index(rand_val)].append(defaultdict(float)) #for centroid value
+			cluster_set[root_nodes.index(rand_val)].append(set()) # for set of nodes
 	print root_nodes
 	return root_nodes
 
@@ -172,7 +248,7 @@ def main():
 	        print "Loading Queries from Local file"
 		print
 	        signal.signal(signal.SIGINT, handler)
-		fileloc="test.json"
+		fileloc="queries.json"
 		loadQueries(fileloc)
 
 if __name__ == '__main__':
