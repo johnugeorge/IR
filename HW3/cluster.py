@@ -15,7 +15,8 @@ document_freq_dict=defaultdict(float)
 doc_id_to_tokens=defaultdict(list)
 cluster_set=defaultdict(list)
 resultSet=defaultdict(float)
-k_value=9
+cluster_to_doc_set=defaultdict(set)
+k_value=5
 
 
 def handler(signal, frame):
@@ -29,6 +30,7 @@ in Datastructures
 def loadQueries(fileloc):
         data=[]
 	total_doc_count=0
+	search_results=30
         json_data=open(fileloc,'r')
         buf=json_data.readlines()
         json_data.close()
@@ -40,13 +42,15 @@ def loadQueries(fileloc):
 		#print len(tokens_in_desc)
 		tokens_in_desc.extend(tokens_in_title)
 		#print len(tokens_in_desc)
+		cluster_to_doc_set[total_doc_count/search_results].add(total_doc_count+1)
 		total_doc_count +=1
 		add_values_to_dict(tokens_in_desc,total_doc_count)
 	print total_doc_count
 	calculate_idf_value(total_doc_count)
 	calculate_tf_idf_value()
 	normalize_tf_idf_value()
-	#print main_dict
+	#print len(main_dict)
+	#print cluster_to_doc_set
 	ececute_k_means(total_doc_count)
 
 
@@ -81,6 +85,7 @@ def call_iterations(rss_value):
 			iter_val=1
 			for elem in cluster_set:
 				print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
+				print "Cluster ",iter_val," Elements", cluster_set[elem][1]
 				iter_val+=1
 			#print "Final Set ",cluster_set
 			return
@@ -244,12 +249,28 @@ def calculate_tf_value(id_val):
 			main_dict[id_val][token]=1+math.log(value,2)
 
 
+def calculate_purity():
+	total_max_value = 0.0
+	for cluster in cluster_set:
+		calculated_results=cluster_set[cluster][1]
+		maxValue=0
+		for elem in cluster_to_doc_set:
+			common_set=calculated_results & cluster_to_doc_set[elem]
+			if maxValue < len(common_set):
+				maxValue=len(common_set)
+		print "MaxValue",maxValue
+		total_max_value += maxValue
+ 	print "Overall Value",total_max_value
+	print "purity value ",total_max_value/len(main_dict)
+
+	
 def main():
 	        print "Loading Queries from Local file"
 		print
 	        signal.signal(signal.SIGINT, handler)
 		fileloc="queries.json"
 		loadQueries(fileloc)
+		calculate_purity()
 
 if __name__ == '__main__':
 	main()
