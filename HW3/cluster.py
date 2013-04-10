@@ -260,7 +260,9 @@ def calculate_purity():
 	purity_value=total_max_value/len(main_dict)
 	return purity_value
 
-
+'''
+Function to calculate rand index value of obtained cluster
+'''
 def calculate_ri():
 	true_positives=0.0
 	true_negatives=0.0
