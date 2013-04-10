@@ -16,8 +16,9 @@ doc_id_to_tokens=defaultdict(list)
 cluster_set=defaultdict(list)
 resultSet=defaultdict(float)
 cluster_to_doc_set=defaultdict(set)
-k_value=5
-
+doc_id_title=defaultdict(str)
+#k_value=10
+search_results=30
 
 def handler(signal, frame):
         print 'You pressed Ctrl+C!..Quiting'
@@ -29,8 +30,8 @@ in Datastructures
 
 def loadQueries(fileloc):
         data=[]
+	global search_results
 	total_doc_count=0
-	search_results=30
         json_data=open(fileloc,'r')
         buf=json_data.readlines()
         json_data.close()
@@ -42,30 +43,33 @@ def loadQueries(fileloc):
 		#print len(tokens_in_desc)
 		tokens_in_desc.extend(tokens_in_title)
 		#print len(tokens_in_desc)
-		cluster_to_doc_set[total_doc_count/search_results].add(total_doc_count+1)
+		cluster_id=total_doc_count/search_results
+		cluster_to_doc_set[cluster_id].add(total_doc_count+1)
 		total_doc_count +=1
+		doc_id_title[total_doc_count]=data['Title']
 		add_values_to_dict(tokens_in_desc,total_doc_count)
 	print total_doc_count
 	calculate_idf_value(total_doc_count)
 	calculate_tf_idf_value()
 	normalize_tf_idf_value()
+	return total_doc_count
 	#print len(main_dict)
 	#print cluster_to_doc_set
-	ececute_k_means(total_doc_count)
 
 
 '''
 K-Means Algorithm
 '''
 
-def ececute_k_means(total_doc_count):
-	root_nodes=create_random_root_nodes(total_doc_count)
+def execute_k_means(total_doc_count,k_value):
+	root_nodes=create_random_root_nodes(total_doc_count,k_value)
 	for doc in main_dict:
 		calculate_nearest_node(doc,root_nodes)
 	calculate_centroid()
 	#print cluster_set
 	initial_rss=calculate_rss()
-	call_iterations(initial_rss)
+	ret = call_iterations(initial_rss)
+	return ret
 
 def call_iterations(rss_value):
 	prev_rss_val=rss_value
@@ -81,14 +85,16 @@ def call_iterations(rss_value):
 			print "Same RSS ",present_rss_val
 			print "Total Iterations ",count
 			print
-			print " Results after Classification "
-			iter_val=1
+			#print " Results after Classification "
+			#iter_val=1
 			for elem in cluster_set:
-				print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
-				print "Cluster ",iter_val," Elements", cluster_set[elem][1]
-				iter_val+=1
+				#print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
+				#print "Cluster ",iter_val," Elements", cluster_set[elem][1]
+				if len(cluster_set[elem][1]) == 0:
+					return 1
+				#iter_val+=1
 			#print "Final Set ",cluster_set
-			return
+			return 0
 		prev_rss_val = present_rss_val
 		count +=1
 		#print cluster_set
@@ -167,8 +173,9 @@ def calculate_nearest_node(doc,root_nodes):
 		#print cluster_set
 		#print "-----results end----"
 
-def create_random_root_nodes(total_doc_count):
+def create_random_root_nodes(total_doc_count,k_value):
 	root_nodes=[]
+	cluster_set.clear()
 	#init_array=[1,4]
 	#count=0
 	while len(root_nodes) != k_value:
@@ -258,19 +265,45 @@ def calculate_purity():
 			common_set=calculated_results & cluster_to_doc_set[elem]
 			if maxValue < len(common_set):
 				maxValue=len(common_set)
-		print "MaxValue",maxValue
+		#print "MaxValue",maxValue
 		total_max_value += maxValue
- 	print "Overall Value",total_max_value
-	print "purity value ",total_max_value/len(main_dict)
-
+	purity_value=total_max_value/len(main_dict)
+ 	#print "Overall Value",total_max_value
+	#print "purity value ",total_max_value/len(main_dict)
+	return purity_value
+	
 	
 def main():
 	        print "Loading Queries from Local file"
 		print
+		global search_results
 	        signal.signal(signal.SIGINT, handler)
 		fileloc="queries.json"
-		loadQueries(fileloc)
-		calculate_purity()
+		doc_count=loadQueries(fileloc)
+		k_value=15
+		ret = execute_k_means(doc_count,k_value)
+		while ret == 1:
+			ret = execute_k_means(doc_count,k_value)
+		purity=calculate_purity()
+		iter_val=1
+		for elem in cluster_set:
+			print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
+			print "Cluster ",iter_val," Elements", cluster_set[elem][1]
+			for doc in cluster_set[elem][1]:
+				cluster_id=doc/search_results
+				if cluster_id == 0:
+					print "\"texas aggies\"," ,"\"",doc_id_title[doc],"\""
+				elif cluster_id == 1:
+					print "\"texas longhorns\"," ,"\"",doc_id_title[doc],"\""
+				elif cluster_id == 2:
+					print "\"duke blue devils\"," ,"\"",doc_id_title[doc],"\""
+				elif cluster_id == 3:
+					print "\"dallas cowboys\"," ,"\"",doc_id_title[doc],"\""
+				elif cluster_id == 4:
+					print "\"dallas mavericks\"," ,"\"",doc_id_title[doc],"\""
+			iter_val+=1
+
+		print "Purity Value is ",purity
 
 if __name__ == '__main__':
 	main()

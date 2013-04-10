@@ -16,6 +16,7 @@ testing_dict=defaultdict(innerdict)
 doc_id_to_tokens=defaultdict(list)
 cluster_set=defaultdict(list)
 cluster_set_to_doc_id=defaultdict(list)
+doc_to_title=defaultdict(str)
 testing_cluster_to_doc_id=defaultdict(list)
 resultSet=defaultdict(innerdict)
 class_prob=defaultdict(float)
@@ -23,6 +24,7 @@ training_cluster_count=0
 training_doc_count=0.0
 testing_set_cluster=defaultdict(int)
 predicted_set_cluster=defaultdict(int)
+predicted_set=defaultdict(list)
 testing_cluster_count=0
 testing_doc_count=0.0
 set_of_tokens=set()
@@ -78,6 +80,7 @@ def loadTestset(fileloc):
 		tokens_in_desc=re.findall(r"[\w]+", data['Description'],re.UNICODE)
 		tokens_in_desc.extend(tokens_in_title)
 		testing_doc_count += 1
+		doc_to_title[testing_doc_count]=data['Title']
 		create_testing_set(tokens_in_desc,testing_doc_count,testing_cluster_count)
 	testing_cluster_count +=1
 	print testing_doc_count
@@ -247,8 +250,25 @@ def calculate_micro_F1_values():
 	f1_values=2*recall*precision/(recall+precision)
 	print f1_values
 
+def getName(cluster):
+	if cluster == 0:
+		cluster_name="Entertainment"
+	elif cluster == 1:
+		cluster_name="Business"
+	elif cluster == 2:
+		cluster_name = "Politics"
+	return cluster_name
 
-
+def printresults():
+	print len(predicted_set_cluster)
+	for doc in predicted_set_cluster:
+		cluster=predicted_set_cluster[doc]
+		predicted_set[cluster].append(doc)
+	for cluster in predicted_set:
+		print
+		print "\"",getName(cluster),"\"" , " Size ",len(predicted_set[cluster])
+		for doc in predicted_set[cluster]:
+			print "\"",getName(testing_set_cluster[doc]).lower(),"\"",doc_to_title[doc] 
 			
 
 def main():
@@ -275,6 +295,7 @@ def main():
 		#'''
 		
 		calculate_micro_F1_values()
+		printresults()
 
 if __name__ == '__main__':
 	main()
