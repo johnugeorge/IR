@@ -17,6 +17,8 @@ cluster_set=defaultdict(list)
 resultSet=defaultdict(float)
 cluster_to_doc_set=defaultdict(set)
 doc_id_title=defaultdict(str)
+actual_cluster_set=defaultdict(int)
+predicted_cluster_set=defaultdict(int)
 #k_value=10
 search_results=30
 
@@ -24,7 +26,7 @@ def handler(signal, frame):
         print 'You pressed Ctrl+C!..Quiting'
         sys.exit(0)
 '''
-Module to load Tweets from Json file and add
+Module to load Queries from Json file and add
 in Datastructures
 '''
 
@@ -39,22 +41,18 @@ def loadQueries(fileloc):
                 data=json.loads(line)
 		tokens_in_title=re.findall(r"[\w]+", data['Title'],re.UNICODE)
 		tokens_in_desc=re.findall(r"[\w]+", data['Description'],re.UNICODE)
-		#print len(tokens_in_title)
-		#print len(tokens_in_desc)
 		tokens_in_desc.extend(tokens_in_title)
-		#print len(tokens_in_desc)
 		cluster_id=total_doc_count/search_results
 		cluster_to_doc_set[cluster_id].add(total_doc_count+1)
 		total_doc_count +=1
+		actual_cluster_set[total_doc_count]=cluster_id
 		doc_id_title[total_doc_count]=data['Title']
 		add_values_to_dict(tokens_in_desc,total_doc_count)
-	print total_doc_count
+	print "Total Documents:",total_doc_count
 	calculate_idf_value(total_doc_count)
 	calculate_tf_idf_value()
 	normalize_tf_idf_value()
 	return total_doc_count
-	#print len(main_dict)
-	#print cluster_to_doc_set
 
 
 '''
@@ -66,12 +64,15 @@ def execute_k_means(total_doc_count,k_value):
 	for doc in main_dict:
 		calculate_nearest_node(doc,root_nodes)
 	calculate_centroid()
-	#print cluster_set
 	initial_rss=calculate_rss()
 	ret = call_iterations(initial_rss)
 	return ret
-
+'''
+Function to repeat iterations until the RSS values remain same
+'''
 def call_iterations(rss_value):
+	global predicted_cluster_set
+	predicted_cluster_set.clear()
 	prev_rss_val=rss_value
 	count=1
 	while True:
@@ -82,23 +83,18 @@ def call_iterations(rss_value):
 		calculate_centroid()
 		present_rss_val=calculate_rss()
 		if present_rss_val == prev_rss_val:
-			print "Same RSS ",present_rss_val
-			print "Total Iterations ",count
-			print
-			#print " Results after Classification "
-			#iter_val=1
+			print "RSS Value:",present_rss_val
 			for elem in cluster_set:
-				#print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
-				#print "Cluster ",iter_val," Elements", cluster_set[elem][1]
 				if len(cluster_set[elem][1]) == 0:
 					return 1
-				#iter_val+=1
-			#print "Final Set ",cluster_set
+				for doc in cluster_set[elem][1]:
+					predicted_cluster_set[doc]=elem
 			return 0
 		prev_rss_val = present_rss_val
 		count +=1
-		#print cluster_set
-
+'''
+Function to calculate rss for cluster obtained
+'''
 def calculate_rss():
 	rss_val=0
 	for elem in cluster_set:
@@ -112,7 +108,9 @@ def calculate_rss():
 				rss_val += diff_val*diff_val
 	return rss_val
 
-
+'''
+Function to asssign a cluster for a particular point
+'''
 def recalculate_cluster_nodes(doc):
 		global resultSet
 		resultSet=defaultdict(float)
@@ -124,18 +122,15 @@ def recalculate_cluster_nodes(doc):
 			if value > 0:
 				resultSet[cluster]=value
 		results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-		#print "-----reclaculate results----", doc
- 		#print results
-		#print "set ",cluster_set
 		if results:
 			nearest_root_node=results[-1][0]
 		else:
 			nearest_root_node=0
 		cluster_set[nearest_root_node][1].add(doc)
-		#print cluster_set
-		#print "-----results end----"
 
-
+'''
+Function to calculate centroid of a cluster
+'''
 def calculate_centroid():
 	for root_doc in cluster_set:
 		set_of_member_set=cluster_set[root_doc][1]
@@ -149,7 +144,9 @@ def calculate_centroid():
 			cluster_centroid_vector[term]= cluster_centroid_vector[term]/total_members
 		cluster_set[root_doc][0]=cluster_centroid_vector
 
-
+'''
+Function to get the nearest centroid for a particular points
+'''
 def calculate_nearest_node(doc,root_nodes):
 		global resultSet
 		resultSet=defaultdict(float)
@@ -161,33 +158,25 @@ def calculate_nearest_node(doc,root_nodes):
 			if value > 0:
 				resultSet[root_doc]=value
 		results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-		#print "----- calculate_nearest results----", doc,root_nodes
- 		#print results
-		#print "set ",cluster_set
 		if results:
 			nearest_root_node=results[-1][0]
 		else:
-			#print " adding node",root_nodes[0]
 			nearest_root_node=root_nodes[0]
 		cluster_set[root_nodes.index(nearest_root_node)][1].add(doc)
-		#print cluster_set
-		#print "-----results end----"
-
+'''
+Function to create random seed nodes based on value of K_Value chosen and total points
+'''
 def create_random_root_nodes(total_doc_count,k_value):
 	root_nodes=[]
 	cluster_set.clear()
-	#init_array=[1,4]
-	#count=0
 	while len(root_nodes) != k_value:
 		rand_val=random.randint(1, total_doc_count)
-		#rand_val=init_array[count]
-		#count+=1
 		if rand_val not in root_nodes:
 			root_nodes.append(rand_val)
 			cluster_set[root_nodes.index(rand_val)] = []
 			cluster_set[root_nodes.index(rand_val)].append(defaultdict(float)) #for centroid value
 			cluster_set[root_nodes.index(rand_val)].append(set()) # for set of nodes
-	print root_nodes
+	print "Random Root nodes :",root_nodes
 	return root_nodes
 
 
@@ -254,7 +243,9 @@ def calculate_tf_value(id_val):
 		for token in main_dict[id_val]:
 			value=main_dict[id_val][token]
 			main_dict[id_val][token]=1+math.log(value,2)
-
+'''
+Function to calculate purity value of obtained cluster
+'''
 
 def calculate_purity():
 	total_max_value = 0.0
@@ -265,45 +256,63 @@ def calculate_purity():
 			common_set=calculated_results & cluster_to_doc_set[elem]
 			if maxValue < len(common_set):
 				maxValue=len(common_set)
-		#print "MaxValue",maxValue
 		total_max_value += maxValue
 	purity_value=total_max_value/len(main_dict)
- 	#print "Overall Value",total_max_value
-	#print "purity value ",total_max_value/len(main_dict)
 	return purity_value
-	
-	
-def main():
+
+
+def calculate_ri():
+	true_positives=0.0
+	true_negatives=0.0
+	false_positives=0.0
+	false_negatives=0.0
+	for d1 in actual_cluster_set:
+		for d2 in actual_cluster_set:
+			if actual_cluster_set[d1]== actual_cluster_set[d2] and predicted_cluster_set[d1] == predicted_cluster_set[d2]:
+				true_positives+=1
+			elif actual_cluster_set[d1]!= actual_cluster_set[d2] and predicted_cluster_set[d1] == predicted_cluster_set[d2]:
+				false_positives+=1
+			elif actual_cluster_set[d1]== actual_cluster_set[d2] and predicted_cluster_set[d1] != predicted_cluster_set[d2]:
+				false_negatives+=1
+			elif actual_cluster_set[d1]!= actual_cluster_set[d2] and predicted_cluster_set[d1] != predicted_cluster_set[d2]:
+				true_negatives+=1
+	ri=(true_positives+true_negatives)/(true_positives+true_negatives +false_positives+false_negatives)
+	return ri
+				
+def main():		
 	        print "Loading Queries from Local file"
 		print
 		global search_results
 	        signal.signal(signal.SIGINT, handler)
 		fileloc="queries.json"
 		doc_count=loadQueries(fileloc)
-		k_value=15
+		k_value=10
 		ret = execute_k_means(doc_count,k_value)
 		while ret == 1:
 			ret = execute_k_means(doc_count,k_value)
 		purity=calculate_purity()
+		rand_index=calculate_ri()
 		iter_val=1
 		for elem in cluster_set:
-			print "Cluster ",iter_val," Size ", len(cluster_set[elem][1])
-			print "Cluster ",iter_val," Elements", cluster_set[elem][1]
+			print
+			print "Cluster ",iter_val
+			print
 			for doc in cluster_set[elem][1]:
 				cluster_id=doc/search_results
 				if cluster_id == 0:
-					print "\"texas aggies\"," ,"\"",doc_id_title[doc],"\""
+					print "texas aggies" ,":",doc_id_title[doc]
 				elif cluster_id == 1:
-					print "\"texas longhorns\"," ,"\"",doc_id_title[doc],"\""
+					print "texas longhorns" ,":",doc_id_title[doc]
 				elif cluster_id == 2:
-					print "\"duke blue devils\"," ,"\"",doc_id_title[doc],"\""
+					print "duke blue devils" ,":",doc_id_title[doc]
 				elif cluster_id == 3:
-					print "\"dallas cowboys\"," ,"\"",doc_id_title[doc],"\""
+					print "dallas cowboys" ,":",doc_id_title[doc]
 				elif cluster_id == 4:
-					print "\"dallas mavericks\"," ,"\"",doc_id_title[doc],"\""
+					print "dallas mavericks" ,":",doc_id_title[doc]
 			iter_val+=1
-
+		print
 		print "Purity Value is ",purity
+		print "Rand Index is ",rand_index
 
 if __name__ == '__main__':
 	main()
