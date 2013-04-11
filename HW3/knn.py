@@ -17,23 +17,27 @@ cluster_set=defaultdict(list)
 testing_cluster_to_doc_id=defaultdict(list)
 resultSet=defaultdict(float)
 cluster_to_doc_set=defaultdict(set)
-k_value=450
 query_dict=defaultdict(innerdict)
 training_set_cluster=defaultdict(int)
 testing_set_cluster=defaultdict(int)
 predicted_set_cluster=defaultdict(int)
+testing_set_doc_tokens=defaultdict(list)
+predicted_set=defaultdict(list)
+doc_to_title=defaultdict(str)
+
 testing_doc_count=0
 training_doc_count=0
 testing_cluster_count=0
 training_cluster_count=0
 match=0.0
-testing_set_doc_tokens=defaultdict(list)
+k_value=450
 
 def handler(signal, frame):
         print 'You pressed Ctrl+C!..Quiting'
         sys.exit(0)
+
 '''
-Module to load Tweets from Json file and add
+Module to load Training data from Json file and add
 in Datastructures
 '''
 
@@ -48,24 +52,18 @@ def loadQueries(fileloc):
                 data=json.loads(line)
 		tokens_in_title=re.findall(r"[\w]+", data['Title'],re.UNICODE)
 		tokens_in_desc=re.findall(r"[\w]+", data['Description'],re.UNICODE)
-		#print len(tokens_in_title)
-		#print len(tokens_in_desc)
 		tokens_in_desc.extend(tokens_in_title)
-		#print len(tokens_in_desc)
 		cluster_to_doc_set[training_cluster_count].add(training_doc_count+1)
 		training_set_cluster[training_doc_count+1]=training_cluster_count
 		training_doc_count +=1
 		add_values_to_dict(tokens_in_desc,training_doc_count)
 	training_cluster_count+=1
-	print training_doc_count
 
 
 def create_training_set():
 	calculate_idf_value(training_doc_count)
 	calculate_tf_idf_value()
 	normalize_tf_idf_value()
-	#print len(main_dict)
-	#print cluster_to_doc_set
 
 
 '''
@@ -124,7 +122,7 @@ def add_values_to_dict(tokens,id_val):
 	return
 
 '''
-Module to calculate tf value for each term
+Module to calculate tf-idf value for each term of a particular testing doc
 '''
 def create_testSet(tokens,doc_id):
 	global query_dict
@@ -149,6 +147,11 @@ def create_testSet(tokens,doc_id):
 	        query_dict[doc_id][token]=value/sq_root
 	return 1
 
+'''
+Module to load testing set from Json file and add
+in Datastructures
+'''
+
 def loadTestset(fileloc):
         global testing_doc_count
         global testing_cluster_count
@@ -164,14 +167,15 @@ def loadTestset(fileloc):
                 tokens_in_desc.extend(tokens_in_title)
                 testing_doc_count += 1
 		testing_set_doc_tokens[testing_doc_count]=tokens_in_desc
+		doc_to_title[testing_doc_count]=data['Title']
 		testing_set_cluster[testing_doc_count]=testing_cluster_count
 		testing_cluster_to_doc_id[testing_cluster_count].append(testing_doc_count)
                 calculate_knn(tokens_in_desc,testing_doc_count,testing_cluster_count)
-		#break
         testing_cluster_count +=1
-        print testing_doc_count
-        print testing_cluster_count
 
+'''
+Module to calculate the k nearest neigbours for a particular doc
+'''
 
 def calculate_nearest_k_neigbours(doc_id):
 	global resultSet
@@ -187,33 +191,36 @@ def calculate_nearest_k_neigbours(doc_id):
 	k_nearest=[elem[0] for elem in results][-k_value:]
 	k_nearest_similarity=[elem[1] for elem in results][-k_value:]
 	resultSet=defaultdict(float)
-        #print " Results ",results
-	#print " k_nearest ", k_nearest
 	count=0
 	for elem in k_nearest:
 		resultSet[training_set_cluster[elem]]+=k_nearest_similarity[count]
 		count+=1
 	results=[(key,val) for key, val in sorted(resultSet.iteritems(), key=lambda (k,v): (v,k))]
-        #print " Results 1 ",results
-        #print " Results ",resultSet
 	return results[-1][0]
-	#print " k_nearest ", k_nearest
 
+'''
+K-NN Algorithm
+'''
 def calculate_knn(tokens,doc_id,actual_cluster_id):
 	global match
 	global testing_set_doc_tokens
 	create_testSet(tokens,doc_id)
 	predicted_set_cluster[doc_id]=calculate_nearest_k_neigbours(doc_id)
-	#print predicted_set_cluster[doc_id] , actual_cluster_id
-	#print "Tokens doc_id",doc_id
-	#print testing_set_doc_tokens[doc_id]
         if predicted_set_cluster[doc_id] == actual_cluster_id:
 		match += 1
+
+'''
+Module to calculate tf value for each term
+'''
 
 def calculate_tf_value(id_val):
 	for token in main_dict[id_val]:
 		value=main_dict[id_val][token]
 		main_dict[id_val][token]=1+math.log(value,2)
+
+'''
+Module to calculate the F1 value for the classfied results
+'''
 
 def calculate_micro_F1_values():
 	true_positives=0.0
@@ -221,37 +228,53 @@ def calculate_micro_F1_values():
 	false_positives=0.0
 	false_negatives=0.0
 	maxSet=defaultdict(float)
-	#print testing_set_cluster
-	#print
-	#print predicted_set_cluster
-	print len(testing_set_cluster)
-	print len(predicted_set_cluster)
 	for cluster in testing_cluster_to_doc_id:
-		print "size is",len(testing_cluster_to_doc_id[cluster])," for cluster",cluster
 		for doc in testing_set_cluster:
 			actual=testing_set_cluster[doc]
 			predicted=predicted_set_cluster[doc]
-			#print "actual ",actual,"predicted ",predicted," for doc ",doc
 			if cluster == actual and predicted == cluster:
-				#print "true_positive"
 				true_positives += 1
 			elif cluster != actual and predicted == cluster:
-				#print "false_positive"
 				false_positives += 1
 			elif cluster == actual and predicted != cluster:
-				#print "false_negative"
 				false_negatives += 1
 			elif cluster != actual and predicted != cluster:
-				#print "true_negative"
 				true_negatives += 1
-	print "true_postives",true_positives
-	print "true_negatives",true_negatives
-	print "false_postives",false_positives
-	print "false_negatives",false_negatives
 	recall=true_positives/(true_positives + false_negatives)
 	precision=true_positives/(true_positives + false_positives)
 	f1_values=2*recall*precision/(recall+precision)
-	print f1_values
+	return f1_values
+
+'''
+Function that returns the name of the category based on cluster id
+'''
+def getName(cluster):
+	if cluster == 0:
+		cluster_name="Entertainment"
+	elif cluster == 1:
+		cluster_name="Business"
+	elif cluster == 2:
+		cluster_name = "Politics"
+	return cluster_name
+
+'''
+Module to print the results in the desired format
+'''
+def printresults():
+	for doc in predicted_set_cluster:
+		cluster=predicted_set_cluster[doc]
+		predicted_set[cluster].append(doc)
+	for cluster in predicted_set:
+		print
+		print getName(cluster)
+		print
+		for doc in predicted_set[cluster]:
+			print getName(testing_set_cluster[doc]).lower(),":",doc_to_title[doc] 
+
+'''
+Main Function
+'''
+
 def main():
 	print "Loading Training Set from Local file"
 	print
@@ -263,6 +286,8 @@ def main():
         fileloc="politics.json"
         loadQueries(fileloc)
 	create_training_set()
+	print  "Training Doc Count:",training_doc_count
+	print
         print "Loading Test Set from Local file"
         print
         fileloc="test_entertainment.json"
@@ -271,8 +296,12 @@ def main():
         loadTestset(fileloc)
         fileloc="test_politics.json"
         loadTestset(fileloc)
-	print " Match", match/(testing_doc_count)
-	calculate_micro_F1_values()
+	print "Testing Doc count:",testing_doc_count
+	f1_value=calculate_micro_F1_values()
+	printresults()
+	print
+	print " F1 Value of Classified output",f1_value
+	print
 
 if __name__ == '__main__':
 	main()
