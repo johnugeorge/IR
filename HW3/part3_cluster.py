@@ -265,7 +265,7 @@ def main():
 		global search_results
 		new_root_node=[]
 	        signal.signal(signal.SIGINT, handler)
-		fileloc="queries.json"
+		fileloc="cluster.json"
 		doc_count=loadQueries(fileloc)
 		k_value=10
 		root_nodes=create_random_root_nodes(doc_count,k_value)

@@ -286,7 +286,7 @@ def main():
 		print
 		global search_results
 	        signal.signal(signal.SIGINT, handler)
-		fileloc="queries.json"
+		fileloc="cluster.json"
 		doc_count=loadQueries(fileloc)
 		k_value=10
 		ret = execute_k_means(doc_count,k_value)

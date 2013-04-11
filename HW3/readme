@@ -1,0 +1,40 @@
+unzip to any folder.
+it will have following files
+1.part1.py
+2.part2.py
+3.part3_cluster.py
+4.part3_classifier.py
+5.cluster.json
+6.entertainment.json
+7.business.json
+8.politics.json
+9.test_entertainment.json
+10.test_business.json
+11.test_politics.json
+12.readme
+
+
+How To Run
+
+part1: clustering
+
+python part1.py
+
+
+part2: Classification
+
+python part2.py
+
+
+part3: Improvements
+
+For clustering:
+	       
+	python part3_cluster.py
+
+For classification:
+	
+	python part3_classifier.py
+
+
+
